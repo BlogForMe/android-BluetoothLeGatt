@@ -113,11 +113,10 @@ public class DeviceControlActivity extends Activity {
                 connectGattService(mBluetoothLeService.getSupportedGattService());
 
             } else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action)) {
-                String recieveData = intent.getStringExtra(BluetoothLeService.EXTRA_DATA);
-                Log.i(TAG,"mGattUpdateReceiver 收到  "+recieveData);
-
-
-                displayData(recieveData);
+//                String recieveData = intent.getStringExtra(BluetoothLeService.EXTRA_DATA);
+                byte[] recieveData = intent.getByteArrayExtra(BluetoothLeService.EXTRA_DATA);
+                Log.i(TAG,"mGattUpdateReceiver 收到  "+recieveData + "  hex "+ bytes2hex(recieveData));
+//                displayData(recieveData);
             }
         }
     };
