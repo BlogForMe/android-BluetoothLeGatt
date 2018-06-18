@@ -16,6 +16,7 @@
 
 package com.example.android.bluetoothlegatt;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.ListActivity;
 import android.bluetooth.BluetoothAdapter;
@@ -26,6 +27,8 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -42,6 +45,7 @@ import java.util.ArrayList;
  * Activity for scanning and displaying available Bluetooth LE devices.
  */
 public class DeviceScanActivity extends ListActivity {
+    private static final int REQUEST_PERMISSION_ACCESS_LOCATION =666 ;
     private LeDeviceListAdapter mLeDeviceListAdapter;
     private BluetoothAdapter mBluetoothAdapter;
     private boolean mScanning;
@@ -99,13 +103,49 @@ public class DeviceScanActivity extends ListActivity {
         switch (item.getItemId()) {
             case R.id.menu_scan:
                 mLeDeviceListAdapter.clear();
-                scanLeDevice(true);
+
+//                scanLeDevice(true);
+                requestPermission();
                 break;
             case R.id.menu_stop:
                 scanLeDevice(false);
                 break;
         }
         return true;
+    }
+
+    private void requestPermission() {
+        int checkAccessPermission = ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION);
+        if (checkAccessPermission != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
+                    REQUEST_PERMISSION_ACCESS_LOCATION);
+//            Timber.e("没有权限，请求权限");
+            return;
+        } else {
+//            searchOrigin();//android4.3以下 ????  不确定
+//             scanLeDevice(true); //android4.3 -- android5.0
+            scanLeDevice(true);
+        }
+//        Timber.i("已有定位权限");
+    }
+
+
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        switch (requestCode) {
+            case REQUEST_PERMISSION_ACCESS_LOCATION: {
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+//                    Timber.d("开启权限permission granted!");
+//                    searchOrigin();
+//                    scanLeDevice(true);
+                    scanLeDevice(true);
+                } else {
+//                    Timber.d("没有定位权限，请先开启!");
+                }
+            }
+        }
     }
 
     @Override
@@ -158,6 +198,12 @@ public class DeviceScanActivity extends ListActivity {
         startActivity(intent);
     }
 
+
+
+    /**
+     * android 4.3 --  android5.0使用的扫描方法
+     * @param enable
+     */
     private void scanLeDevice(final boolean enable) {
         if (enable) {
             // Stops scanning after a pre-defined scan period.

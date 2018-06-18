@@ -39,6 +39,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import static com.example.android.bluetoothlegatt.BluetoothLeService.CHARACTERISTIC_NOTIFY_1;
+
 /**
  * For a given BLE device, this Activity provides the user interface to connect, display data,
  * and display GATT services and characteristics supported by the device.  The Activity
@@ -106,12 +108,58 @@ public class DeviceControlActivity extends Activity {
                 clearUI();
             } else if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
                 // Show all the supported services and characteristics on the user interface.
-                displayGattServices(mBluetoothLeService.getSupportedGattServices());
+//                displayGattServices(mBluetoothLeService.getSupportedGattServices());
+
+                connectGattService(mBluetoothLeService.getSupportedGattService());
+
             } else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action)) {
-                displayData(intent.getStringExtra(BluetoothLeService.EXTRA_DATA));
+                String recieveData = intent.getStringExtra(BluetoothLeService.EXTRA_DATA);
+                Log.i(TAG,"mGattUpdateReceiver 收到  "+recieveData);
+
+
+                displayData(recieveData);
             }
         }
     };
+
+
+    //打印hex日志
+    public static String bytes2hex(byte[] bytes) {
+        StringBuilder sb = new StringBuilder();
+        String tmp = null;
+        for (byte b : bytes) {
+            // 将每个字节与0xFF进行与运算，然后转化为10进制，然后借助于Integer再转化为16进制
+            tmp = Integer.toHexString(0xFF & b);
+            if (tmp.length() == 1) {
+                tmp = "0" + tmp;
+            }
+            sb.append(tmp).append(" ");
+        }
+        return sb.toString();
+    }
+
+    private void connectGattService(BluetoothGattService supportedGattService) {
+        if (supportedGattService!=null){
+          BluetoothGattCharacteristic characteristic  = supportedGattService.getCharacteristic(CHARACTERISTIC_NOTIFY_1);
+                final int charaProp = characteristic.getProperties();
+                if ((charaProp | BluetoothGattCharacteristic.PROPERTY_READ) > 0) {
+                    // If there is an active notification on a characteristic, clear
+                    // it first so it doesn't update the data field on the user interface.
+                    if (mNotifyCharacteristic != null) {
+                        mBluetoothLeService.setCharacteristicNotification(
+                                mNotifyCharacteristic, false);
+                        mNotifyCharacteristic = null;
+                    }
+                    mBluetoothLeService.readCharacteristic(characteristic);
+                }
+                if ((charaProp | BluetoothGattCharacteristic.PROPERTY_NOTIFY) > 0) {
+                    mNotifyCharacteristic = characteristic;
+                    mBluetoothLeService.setCharacteristicNotification(
+                            characteristic, true);
+                }
+            }
+
+    }
 
     // If a given GATT characteristic is selected, check for supported features.  This sample
     // demonstrates 'Read' and 'Notify' features.  See

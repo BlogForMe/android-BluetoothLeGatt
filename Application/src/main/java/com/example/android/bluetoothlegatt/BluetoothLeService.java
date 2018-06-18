@@ -103,6 +103,7 @@ public class BluetoothLeService extends Service {
                                          BluetoothGattCharacteristic characteristic,
                                          int status) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
+                Log.i(TAG,"onCharacteristicRead  ACTION_DATA_AVAILABLE");
                 broadcastUpdate(ACTION_DATA_AVAILABLE, characteristic);
             }
         }
@@ -110,6 +111,7 @@ public class BluetoothLeService extends Service {
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt,
                                             BluetoothGattCharacteristic characteristic) {
+            Log.i(TAG,"onCharacteristicChanged ACTION_DATA_AVAILABLE");
             broadcastUpdate(ACTION_DATA_AVAILABLE, characteristic);
         }
     };
@@ -315,5 +317,14 @@ public class BluetoothLeService extends Service {
         if (mBluetoothGatt == null) return null;
 
         return mBluetoothGatt.getServices();
+//        return mBluetoothGatt.getService(GATT_SERVICE_PRIMARY_1);
     }
+
+    public  BluetoothGattService getSupportedGattService(){
+        if (mBluetoothGatt==null)return null;
+        return  mBluetoothGatt.getService(GATT_SERVICE_PRIMARY_1);
+    }
+
+    public static final UUID GATT_SERVICE_PRIMARY_1 =UUID.fromString("0000fff0-0000-1000-8000-00805f9b34fb");  // 体达 体温计
+    public static final UUID CHARACTERISTIC_NOTIFY_1 =UUID.fromString("0000fff1-0000-1000-8000-00805f9b34fb");
 }
